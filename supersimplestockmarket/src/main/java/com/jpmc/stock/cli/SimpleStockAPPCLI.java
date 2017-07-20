@@ -4,6 +4,7 @@ import com.jpmc.stock.exception.SimpleStockCustomException;
 import com.jpmc.stock.models.StockModel;
 import com.jpmc.stock.models.TradeModel;
 import com.jpmc.stock.repository.StockDataRepository;
+import com.jpmc.stock.repository.TradeDataRepository;
 import com.jpmc.stock.services.StockService;
 import com.jpmc.stock.services.TradeService;
 import com.jpmc.stock.services.impl.StockServiceImpl;
@@ -26,12 +27,34 @@ import java.util.concurrent.TimeUnit;
 @ComponentScan
 public class SimpleStockAPPCLI {
 
-    @Bean(name = "stockData1")
+    @Bean(name = "stockData")
     public Map<String, StockModel> retrieveStockData() {
-        StockDataRepository stockDataRepository = new StockDataRepository();
+        StockDataRepository stockDataRepository = getStockRepository();
         return stockDataRepository.getStockData();
     }
 
+    @Bean(name = "stockService")
+    public StockService getStockService() {
+        return new StockServiceImpl();
+
+    }
+
+    @Bean(name = "stockRepository")
+    public StockDataRepository getStockRepository() {
+        return new StockDataRepository();
+
+    }
+
+    @Bean(name = "tradesService")
+    public TradeService getTradesService() {
+        return new TradeServiceImpl();
+
+    }
+    @Bean(name = "tradesRepository")
+    public TradeDataRepository getTradeRepository() {
+        return new TradeDataRepository();
+
+    }
     public static void main(String[] args) {
 
         System.out.println("======================================================================");
@@ -39,15 +62,14 @@ public class SimpleStockAPPCLI {
         System.out.println("======================================================================");
 
         try {
-            StockService stockService = new StockServiceImpl();
-            TradeService tradeService = new TradeServiceImpl();
+
             ApplicationContext context = new AnnotationConfigApplicationContext(SimpleStockAPPCLI.class);
             //retrieving the stock data from in-memory stock repository
-            //Map<String, StockModel> stockData = context.getBean("stockData1",Map.class);
-            StockDataRepository stockDataRepository = new StockDataRepository();
-            Map<String, StockModel> stockDataMap =  stockDataRepository.getStockData();
+            Map<String, StockModel> stockData = context.getBean("stockData",Map.class);
+            StockService stockService = context.getBean("stockService",StockService.class);
+            TradeService tradeService = context.getBean("tradesService",TradeService.class);
 
-            for (StockModel stock : stockDataMap.values()) {
+            for (StockModel stock : stockData.values()) {
                 //Calculating the Dividend yeild ad PERation for given stock type and symbol
                 System.out.println("Stock Symbol : " + stock.getSymbol() + " and its stock type : " + stock.getType());
                 System.out.println("Divident yield ::: " + stockService.calculateDividendYield(stock, 8.9));
